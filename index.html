@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 300px;
+        }
+        #comments, #sentiment-summary, #impact-summary {
+            margin-top: 20px;
+        }
+        #comments ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #comments ul li {
+            margin: 5px 0;
+            padding: 5px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sentiment Analysis for YouTube Comments</h1>
+
+    <input type="text" id="query" placeholder="Enter search query" />
+    <button onclick="analyzeSentiment()">Analyze</button>
+
+    <div id="comments">
+        <h2>Fetched Comments</h2>
+        <ul id="comments-list"></ul>
+    </div>
+
+    <div id="sentiment-summary">
+        <h2>Sentiment Summary</h2>
+        <p>Total Comments: <span id="total-comments"></span></p>
+        <p>Positive: <span id="positive"></span></p>
+        <p>Negative: <span id="negative"></span></p>
+        <p>Neutral: <span id="neutral"></span></p>
+    </div>
+
+    <div id="impact-summary">
+        <h2>Impact Summary</h2>
+        <p id="impact"></p>
+    </div>
+
+    <script>
+        async function analyzeSentiment() {
+            const query = document.getElementById('query').value;
+
+            if (!query) {
+                alert("Please enter a search query.");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Display comments
+                const commentsList = document.getElementById('comments-list');
+                commentsList.innerHTML = '';
+                data.comments.forEach(comment => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = comment;
+                    commentsList.appendChild(listItem);
+                });
+
+                // Display sentiment summary
+                document.getElementById('total-comments').textContent = data.sentiment_summary.total_comments;
+                document.getElementById('positive').textContent = data.sentiment_summary.positive;
+                document.getElementById('negative').textContent = data.sentiment_summary.negative;
+                document.getElementById('neutral').textContent = data.sentiment_summary.neutral;
+
+                // Display impact summary
+                document.getElementById('impact').textContent = data.impact_summary;
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while analyzing sentiment.');
+            }
+        }
+    </script>
+</body>
+</html>
